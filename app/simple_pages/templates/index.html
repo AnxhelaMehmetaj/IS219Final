@@ -1,11 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
     <div class="row">
-        <article class="col-8 lh-lg fs-5">
 
-            <h1>Index Page</h1>
-            {{ lipsum (n=5, html=True, min=20, max=100) }}
-        </article>
         {% if current_user.is_authenticated == false %}
             <aside class="col-4">
                 <h2>Login</h2>
@@ -22,4 +18,34 @@
 
     </div>
 {% endblock %}
-</article>
+
+<article class="col-8 lh-lg fs-5">
+
+            <h1>Index Page</h1>
+                {% block body %}
+	<div class="container" id="topdiv6">
+		<nav class="navbar navbar-light bg-light">
+			<span class="navbar-brand mb-0 h1">Products</span>
+			<a class="my-2 my-sm-0" href="{{url_for('signup')}}">Are you a Merchant?</a>
+		</nav>
+		{% if rows %}
+				<div class="row" id="index0">
+					{% for row in rows %}
+						<div class="card needspace" style="width: 18rem;">
+							<img src="{{ url_for('static_dir', path = 'images/'+row.filename) }}" class="card-img-top" alt="...">
+							<div class="card-body">
+			    				<h5 class="card-title">{{row.name}}</h5>
+			    				<p class="card-text">{{row.category}}</p>
+			  				</div>
+			  				<ul class="list-group list-group-flush">
+			  					<li class="list-group-item">{{row.description}}</li>
+			    				<li class="list-group-item">Price Range: {{row.price_range}}</li>
+			    				<li class="list-group-item">{{row.comments}}</li>
+			  				</ul>
+						</div>
+					{% endfor %}
+				</div>
+			{% endif %}
+	</div>
+{% endblock %}
+        </article>

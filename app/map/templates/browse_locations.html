@@ -10,7 +10,8 @@
         <h2>Browse: Locations</h2>
         {{ render_table(
             data,
-            show_actions=True, table_classes='table-striped', header_classes='thead-dark', responsive=True, responsive_class='table-responsive-sm', model=Location,
+            show_actions=True, table_classes='table-striped', header_classes='thead-dark',
+             responsive=True, responsive_class='table-responsive-sm', model=Location,
             new_url=new_url,
             edit_url=edit_url,
             delete_url=delete_url)}}

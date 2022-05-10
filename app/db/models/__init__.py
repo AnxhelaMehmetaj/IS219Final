@@ -17,6 +17,11 @@ song_user = db.Table('song_user', db.Model.metadata,
     db.Column('song_id', db.Integer, db.ForeignKey('songs.id'))
 )
 
+user_product=db.Table('user_product', db.Model.metadata,
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+    db.Column('product_id', db.Integer, db.ForeignKey('products.id'))
+                      )
+
 
 
 class Song(db.Model,SerializerMixin):
@@ -55,6 +60,29 @@ class Location(db.Model, SerializerMixin):
             'long': self.longitude,
             'lat': self.latitude,
             'population': self.population,
+        }
+
+class products(db.Model,SerializerMixin):
+    __tablename__ = 'products'
+    id = db.Column(db.Integer, primary_key=True)
+    name=db.Column(db.String(200), nullable=False)
+    description=db.Column(db.String(200), nullable=False)
+    price=db.Column(db.String(200), nullable=False)
+    comments=db.Column(db.String(200), nullable=False)
+    filename=db.Column(db.Text, nullable=False, unique=True)
+    email=db.Column(db.String(50), nullable=False)
+
+    def __init__(self, name):
+        self.name=name
+
+    def serialize(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'price': self.price,
+            'comments': self.comments,
+            'filename':self.filename,
+            'email':self.email
         }
 
 
