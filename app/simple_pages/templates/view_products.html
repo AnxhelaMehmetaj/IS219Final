@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+    {#    {% from 'bootstrap5/form.html' import render_form, render_field, render_form_row %}#}
+    {% from 'bootstrap5/table.html' import render_table %}
+
+    <div class="row">
+        <article class="col-12">
+            <h1>Welcome</h1>
+            <h4>Your Products</h4>
+
+        </article>
+
+        {% for product in data %}
+            <div class="card" style="width: 18rem;">
+                <img class="card-img-top" src="{{ product.filename }}" alt="Card image cap">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text"> {{ product.description }}</p>
+                    <p class="card-text"> {{ product.comments }}</p>
+                    <a href="#" class="btn btn-primary">Go somewhere</a>
+                </div>
+            </div>
+        {% endfor %}
+
+
+    </div>
+{% endblock %}

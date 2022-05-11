@@ -1,13 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
     {% from 'bootstrap5/form.html' import render_form, render_field, render_form_row %}
+    {% from 'bootstrap5/table.html' import render_table %}
 
     <div class="row">
         <article class="col-12">
             <h1>Welcome</h1>
-              <h4>Product Information :{{ form.data.population }}</h4>
-             {{ render_form(form) }}
+            <h4>Your Products</h4>
         </article>
+        {{ render_table(
+            data,
+            show_actions=True,
+            table_classes='table-striped',
+            header_classes='thead-dark',
+            responsive=True,
+            responsive_class='table-responsive-sm',
+            model=products,
+            new_url=add_url) }}
+
+
     </div>
 {% endblock %}
-</article>

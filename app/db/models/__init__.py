@@ -72,8 +72,14 @@ class products(db.Model,SerializerMixin):
     filename=db.Column(db.Text, nullable=False, unique=True)
     email=db.Column(db.String(50), nullable=False)
 
-    def __init__(self, name):
+    def __init__(self, name, description,price, comments,filename,email):
         self.name=name
+        self.description=description
+        self.price = price
+        self.comments = comments
+        self.filename = filename
+        self.email = email
+
 
     def serialize(self):
         return {
