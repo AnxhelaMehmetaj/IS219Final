@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+    {% from 'bootstrap5/form.html' import render_form, render_field, render_form_row %}
+
+    <div class="row">
+        <article class="col-12">
+            <h1>Welcome</h1>
+              <h4>Product Information :{{ form.data.population }}</h4>
+             {{ render_form(form) }}
+        </article>
+    </div>
+{% endblock %}
+</article>
