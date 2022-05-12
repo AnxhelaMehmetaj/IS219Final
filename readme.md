@@ -5,6 +5,19 @@
 [![Development Workflow](https://github.com/AnxhelaMehmetaj/IS219Final/actions/workflows/dev.yml/badge.svg)](https://github.com/AnxhelaMehmetaj/IS219Final/actions/workflows/dev.yml)
 * [Developmental Deployment](https://is219-devfinal.herokuapp.com/)
 
+
+##Step 1 — Creating a Base Application
+It is a small web application inside a Python file and run it to start the server, which will display some information on the browser.
+Once you create the app instance, you use it to handle incoming web requests and send responses to the user. @app.route is a decorator that turns a regular Python function into a Flask view function, which converts the function’s return value into an HTTP response to be displayed by an HTTP client, such as a web browser. 
+##step2- Using HTML templates
+Flask provides a render_template() helper function that allows use of the Jinja template engine. This will make managing HTML much easier by writing your HTML code in .html files as well as using logic in your HTML code.
+##Step3-Displaying All Posts
+Now that you’ve set up your database, you can now modify the index() view function to display all the posts you have in your database.
+##step4-  I created a new Flask route with a view function and a new HTML template to display an individual view product post by its ID.
+Creating a New Post
+Editing a Post
+Deleting a Post
+
 ## Setting up CI/CD
 
 The result of this will be that when you create a pull request to merge a branch to master, it will deploy to your
