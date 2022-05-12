@@ -1,4 +1,5 @@
-from email.mime import application
+import sqlite3
+
 from urllib import request
 
 import pytest
@@ -10,7 +11,7 @@ from flask_login import FlaskLoginClient
 
 from flask_login import current_user
 
-from app.db.models import User, products
+from app.db.models import User, products, Location
 
 from app.db import db
 from app import create_app
@@ -219,5 +220,129 @@ def test_create_database():
     dir = os.path.join(location, '../database')
     assert os.path.exists(dir) == True
 
+def test_make_insert():
+    fields = ['email', 'password', 'is_admin']
+    actual = User(fields, 'users', 1)
+
+    expected = 'INSERT INTO users(email, password, is_admin) VALUES (sample@sample.com, 1)'
+    assert(expected, actual)
 
 
+def test_add_products(client):
+    name = "orange"
+    description = "orange"
+    price = "2"
+    comments = "orange"
+    img = "http"
+    email = "sample@sample.com"
+
+    client.post("/register",
+                data={"email": "sample@sample.com", "password": "Test1234",
+                      "confirm": "Test1234"},
+                follow_redirects=True)
+    client.post("/login", data={"email": "sample@sample.com", "password": "Test1234"}, follow_redirects=True)
+    response = client.post("/products/new", data={"name": name, "description": description,
+                                                  "price": price, "comments": comments, "filename": img, "email": email}, follow_redirects=True)
+    assert b'Congratulations, you just created a product' in response.data
+    assert response.status_code == 200
+
+def test_adding_location(application):
+    with application.app_context():
+        assert db.session.query(Location).count() == 0
+
+        # showing how to add a record
+        # create a record
+        location = Location('title', 35, 22, 250)
+
+        # add it to get ready to be committed
+        db.session.add(location)
+        # call the commit
+        # db.session.commit()
+        # assert that we now have a new user
+        # assert db.session.query(products).count() == 1
+        # finding one user record by email
+        location = Location.query.filter_by(title='title').first()
+        # asserting that the user retrieved is correct
+        assert location.title == 'title'
+
+
+
+def test_edit_location(application):
+    application.test_client_class = FlaskLoginClient
+    user = User('admin@admin.com', 'Admin123', 1)
+    location = Location("title", "longitude", "latitude", "population")
+    db.session.add(user)
+    db.session.add(location)
+    db.session.commit()
+
+    assert db.session.query(User).count() == 1
+    assert db.session.query(Location).count() == 1
+
+    with application.test_client(user=user) as client:
+        response = client.post('/locations/1/edit',
+                              data={"title": "tite", "population": "poplation"},
+                              follow_redirects=True)
+        assert b'Location Edited Successfully' in response.data
+
+
+
+
+def test_delete_location(application):
+    application.test_client_class = FlaskLoginClient
+    user = User('admin@admin.com', 'Admin123', 1)
+    location = Location("title", "longitude", "latitude", "population")
+    db.session.add(user)
+    db.session.add(location)
+    db.session.commit()
+
+    assert db.session.query(User).count() == 1
+    assert db.session.query(Location).count() == 1
+
+    with application.test_client(user=user) as client:
+        response = client.post('/locations/1/delete', follow_redirects=True)
+        assert b'Location deleted Successfully' in response.data
+
+def test_delete_product(application):
+    name = "orange"
+    description = "orange"
+    price = "2"
+    comments = "orange"
+    img = "http"
+    email = "sample@sample.com"
+    application.test_client_class = FlaskLoginClient
+    user = User('admin@admin.com', 'Admin123', 1)
+    product = products(name, description, price, comments, img, email)
+    db.session.add(user)
+    db.session.add(product)
+    db.session.commit()
+
+    assert user.email == 'admin@admin.com'
+    assert db.session.query(User).count() == 1
+    assert db.session.query(products).count() == 1
+
+    with application.test_client(user=user) as client:
+        response = client.get('/products/1/delete', follow_redirects=True)
+        assert b'Product Deleted' in response.data
+
+
+def test_same_product_filename(application):
+    name = "orange"
+    description = "orange"
+    price = "2"
+    comments = "orange"
+    img = "http"
+    email = "sample@sample.com"
+    application.test_client_class = FlaskLoginClient
+    user = User('admin@admin.com', 'Admin123', 1)
+    product = products(name, description, price, comments, img, email)
+    db.session.add(user)
+    db.session.add(product)
+    db.session.commit()
+
+    assert user.email == 'admin@admin.com'
+    assert db.session.query(User).count() == 1
+    assert db.session.query(products).count() == 1
+
+    with application.test_client(user=user) as client:
+        response = client.post('/products/new', data={"name": name, "description": description, "price": price, "comments": comments, "filename": img, "email": email}, follow_redirects=True)
+        assert b'Product with that image already exists' in response.data

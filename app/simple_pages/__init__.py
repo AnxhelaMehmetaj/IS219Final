@@ -36,11 +36,10 @@ def welcome():
 
 @simple_pages.route('/products')
 @login_required
-
 def browse_products():
     data = products.query.all()
-    titles = [('Product id', 'id')]
     add_url = url_for('simple_pages.add_product')
+    delete_url = ('simple_pages.delete_product', [('product_id', ':id')])
 
     current_app.logger.info("Browse page loading")
 
@@ -48,6 +47,7 @@ def browse_products():
                            data=data,
                            products=products,
                            add_url=add_url,
+                           delete_url=delete_url,
                            record_type="products")
 
 
@@ -73,8 +73,8 @@ def view_products():
 def add_product():
     form = create_product_form()
     if form.validate_on_submit():
-        name =products.query.filter_by(name=form.name.data).first()
-        if name is None:
+        filename = products.query.filter_by(filename=form.filename.data).first()
+        if filename is None:
             product = products(name=form.name.data,
                                description=form.description.data,
                                 price=form.price.data, comments=form.comments.data,
@@ -85,7 +85,17 @@ def add_product():
             flash('Congratulations, you just created a product', 'success')
             return redirect(url_for('simple_pages.browse_products'))
         else:
-            flash('new product')
+            flash('Product with that image already exists')
             return redirect(url_for('simple_pages.browse_products'))
     return render_template('add_products.html', form=form)
 
+
+@simple_pages.route('/products/<int:product_id>/delete', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def delete_product(product_id):
+    product = products.query.get(product_id)
+    db.session.delete(product)
+    db.session.commit()
+    flash('Product Deleted', 'success')
+    return redirect(url_for('simple_pages.view_products'))
