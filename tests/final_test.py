@@ -1,21 +1,36 @@
-from email.mime import application
+import sqlite3
+
 from urllib import request
 
 import pytest
-from flask_login import current_user
+import os
+from app import db, auth
 from app.db.models import User
+from app.auth.forms import csv_upload
+from flask_login import FlaskLoginClient
+
+from flask_login import current_user
+
+from app.db.models import User, products, Location
 
 from app.db import db
 from app import create_app
-from flask import g
+from flask import g, logging
 from flask import session
 import app
 
+import os
+import logging
+
+from click.testing import CliRunner
+
+from app import create_database, create_log_folder
+
+runner = CliRunner()
 
 """Tests for Project 2"""
 test_email = "tobedeleted@tobedeleted.com"
 test_password = "Password123"
-
 
 
 @pytest.mark.parametrize(
@@ -27,6 +42,7 @@ def test_bad_password_login(client, email, password, message):
     response = client.post("/login", data={"email": email, "password": password}, follow_redirects=True)
     assert response.status_code == 200
     assert message in response.data
+
 
 @pytest.mark.parametrize(
     ("email", "password", "message"),
@@ -84,7 +100,7 @@ def test_already_registered(client):
 
 def test_successful_login(client):
     client.post("/register", data=dict(email=test_email, password=test_password, confirm=test_password),
-                           follow_redirects=True)
+                follow_redirects=True)
     response = client.post("/login", data={"email": test_email, "password": test_password}, follow_redirects=True)
     assert response.status_code == 200
     assert b"Welcome" in response.data
@@ -125,3 +141,208 @@ def test_menu_links(client):
     assert b'href="/about"' in response.data
     assert b'href="/login"' in response.data
     assert b'href="/register"' in response.data
+    assert b'href="/view_products"' in response.data
+
+
+def test_adding_products(application):
+    with application.app_context():
+        assert db.session.query(products).count() == 0
+
+        # showing how to add a record
+        # create a record
+        product = products('berry', 'berry', 2, 'berry',
+                           'https://images.unsplash.com/photo-1425934398893-310a009a77f9?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTB8fGJlcnJ5fGVufDB8fDB8fA%3D%3D&w=1000&q=80',
+                           'sample@sample.com')
+        # add it to get ready to be committed
+        db.session.add(product)
+        # call the commit
+        # db.session.commit()
+        # assert that we now have a new user
+        # assert db.session.query(products).count() == 1
+        # finding one user record by email
+        product = products.query.filter_by(name='berry').first()
+        # asserting that the user retrieved is correct
+        assert product.email == 'sample@sample.com'
+
+
+def test_upload_locations(application):
+    application.test_client_class = FlaskLoginClient
+    user = User('sample@sample.com', 'testtest', 1)
+    db.session.add(user)
+    db.session.commit()
+
+    assert user.email == 'sample@sample.com'
+    assert db.session.query(User).count() == 1
+
+    root = os.path.dirname(os.path.abspath(__file__))
+    locations = os.path.join(root, '../uploads/us_cities_short_1.csv')
+
+    with application.test_client(user=user) as client:
+        response = client.get('/locations/upload')
+        assert response.status_code == 200
+
+        form = csv_upload()
+        form.file = locations
+        assert form.validate
+
+
+def test_failed_cvs(client):
+    response = client.get('locations/uploads')
+    assert response.status_code == 404  # User should login for the test
+    assert db.session.query(User).count() == 0
+
+
+def dashboard_acess_test(application):
+    application.test_client_class = FlaskLoginClient
+    user = User('sample@sample.com', 'testtest', 1)
+    db.session.add(user)
+    db.session.commit()
+    assert user.email == 'sample@sample.com'
+    assert db.session.query(User).count() == 1
+    with application.test_client(user=user) as client:
+        response = client.get('/dashboard')
+        assert b'sample@sample.com' in response.data
+        assert response.status_code == 200
+
+
+def test_deny_dashboard(application):
+    application.test_client_class = FlaskLoginClient
+    assert db.session.query(User).count() == 0
+    with application.test_client(user=None) as client:
+        response = client.get('/dashboard')
+        assert response.status_code == 302
+
+
+def test_create_database():
+    response = runner.invoke(create_database)
+    assert response.exit_code == 0
+    location = os.path.dirname(os.path.abspath(__file__))
+    dir = os.path.join(location, '../database')
+    assert os.path.exists(dir) == True
+
+def test_make_insert():
+    fields = ['email', 'password', 'is_admin']
+    actual = User(fields, 'users', 1)
+
+    expected = 'INSERT INTO users(email, password, is_admin) VALUES (sample@sample.com, 1)'
+    assert(expected, actual)
+
+
+def test_add_products(client):
+    name = "orange"
+    description = "orange"
+    price = "2"
+    comments = "orange"
+    img = "http"
+    email = "sample@sample.com"
+
+    client.post("/register",
+                data={"email": "sample@sample.com", "password": "Test1234",
+                      "confirm": "Test1234"},
+                follow_redirects=True)
+    client.post("/login", data={"email": "sample@sample.com", "password": "Test1234"}, follow_redirects=True)
+    response = client.post("/products/new", data={"name": name, "description": description,
+                                                  "price": price, "comments": comments, "filename": img, "email": email}, follow_redirects=True)
+    assert b'Congratulations, you just created a product' in response.data
+    assert response.status_code == 200
+
+def test_adding_location(application):
+    with application.app_context():
+        assert db.session.query(Location).count() == 0
+
+        # showing how to add a record
+        # create a record
+        location = Location('title', 35, 22, 250)
+
+        # add it to get ready to be committed
+        db.session.add(location)
+        # call the commit
+        # db.session.commit()
+        # assert that we now have a new user
+        # assert db.session.query(products).count() == 1
+        # finding one user record by email
+        location = Location.query.filter_by(title='title').first()
+        # asserting that the user retrieved is correct
+        assert location.title == 'title'
+
+
+
+def test_edit_location(application):
+    application.test_client_class = FlaskLoginClient
+    user = User('admin@admin.com', 'Admin123', 1)
+    location = Location("title", "longitude", "latitude", "population")
+    db.session.add(user)
+    db.session.add(location)
+    db.session.commit()
+
+    assert db.session.query(User).count() == 1
+    assert db.session.query(Location).count() == 1
+
+    with application.test_client(user=user) as client:
+        response = client.post('/locations/1/edit',
+                              data={"title": "tite", "population": "poplation"},
+                              follow_redirects=True)
+        assert b'Location Edited Successfully' in response.data
+
+
+
+
+def test_delete_location(application):
+    application.test_client_class = FlaskLoginClient
+    user = User('admin@admin.com', 'Admin123', 1)
+    location = Location("title", "longitude", "latitude", "population")
+    db.session.add(user)
+    db.session.add(location)
+    db.session.commit()
+
+    assert db.session.query(User).count() == 1
+    assert db.session.query(Location).count() == 1
+
+    with application.test_client(user=user) as client:
+        response = client.post('/locations/1/delete', follow_redirects=True)
+        assert b'Location deleted Successfully' in response.data
+
+def test_delete_product(application):
+    name = "orange"
+    description = "orange"
+    price = "2"
+    comments = "orange"
+    img = "http"
+    email = "sample@sample.com"
+    application.test_client_class = FlaskLoginClient
+    user = User('admin@admin.com', 'Admin123', 1)
+    product = products(name, description, price, comments, img, email)
+    db.session.add(user)
+    db.session.add(product)
+    db.session.commit()
+
+    assert user.email == 'admin@admin.com'
+    assert db.session.query(User).count() == 1
+    assert db.session.query(products).count() == 1
+
+    with application.test_client(user=user) as client:
+        response = client.get('/products/1/delete', follow_redirects=True)
+        assert b'Product Deleted' in response.data
+
+
+def test_same_product_filename(application):
+    name = "orange"
+    description = "orange"
+    price = "2"
+    comments = "orange"
+    img = "http"
+    email = "sample@sample.com"
+    application.test_client_class = FlaskLoginClient
+    user = User('admin@admin.com', 'Admin123', 1)
+    product = products(name, description, price, comments, img, email)
+    db.session.add(user)
+    db.session.add(product)
+    db.session.commit()
+
+    assert user.email == 'admin@admin.com'
+    assert db.session.query(User).count() == 1
+    assert db.session.query(products).count() == 1
+
+    with application.test_client(user=user) as client:
+        response = client.post('/products/new', data={"name": name, "description": description, "price": price, "comments": comments, "filename": img, "email": email}, follow_redirects=True)
+        assert b'Product with that image already exists' in response.data

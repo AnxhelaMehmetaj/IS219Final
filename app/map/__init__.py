@@ -71,7 +71,7 @@ def delete_location(loc_id):
     loc = Location.query.get(loc_id)
     db.session.delete(loc)
     db.session.commit()
-    flash('Location Deleted', 'success')
+    flash('Location deleted Successfully', 'success')
     return redirect(url_for('map.browse_locations_datatables'))
 
 
