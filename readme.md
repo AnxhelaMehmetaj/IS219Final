@@ -1,11 +1,9 @@
 # Project Setup
+[![Production Workflow](https://github.com/AnxhelaMehmetaj/IS219Final/actions/workflows/prod.yml/badge.svg)](https://github.com/AnxhelaMehmetaj/IS219Final/actions/workflows/prod.yml)
+* [Production Deployment](https://is219-prodfinal.herokuapp.com/)
 
-[![Production Workflow](https://github.com/AnxhelaMehmetaj/is219_flask/actions/workflows/prod.yml/badge.svg)](https://github.com/AnxhelaMehmetaj/is219_flask/actions/workflows/prod.yml)
-* [Production Deployment](https://dockerflaskappl.herokuapp.com/register)
-
-
-[![Development Workflow](https://github.com/AnxhelaMehmetaj/is219_flask/actions/workflows/dev.yml/badge.svg)](https://github.com/AnxhelaMehmetaj/is219_flask/actions/workflows/dev.yml)
-* [Developmental Deployment](https://docker-flask-app-dev.herokuapp.com/)
+[![Development Workflow](https://github.com/AnxhelaMehmetaj/IS219Final/actions/workflows/dev.yml/badge.svg)](https://github.com/AnxhelaMehmetaj/IS219Final/actions/workflows/dev.yml)
+* [Developmental Deployment](https://is219-devfinal.herokuapp.com/)
 
 ## Setting up CI/CD
 
