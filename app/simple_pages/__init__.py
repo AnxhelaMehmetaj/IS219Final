@@ -5,7 +5,7 @@ from jinja2 import TemplateNotFound
 from app import db
 from app.auth import admin_required
 from app.db.models import products
-from app.simple_pages.forms import create_product_form
+from app.simple_pages.forms import create_product_form, edit_location_form
 
 simple_pages = Blueprint('simple_pages', __name__,
                         template_folder='templates')
@@ -40,13 +40,14 @@ def browse_products():
     data = products.query.all()
     add_url = url_for('simple_pages.add_product')
     delete_url = ('simple_pages.delete_product', [('product_id', ':id')])
-
+    edit_url = ('simple_pages.edit_product', [('product_id', ':id')])
     current_app.logger.info("Browse page loading")
 
     return render_template('welcome.html',
                            data=data,
                            products=products,
                            add_url=add_url,
+                           edit_url=edit_url,
                            delete_url=delete_url,
                            record_type="products")
 
@@ -92,10 +93,29 @@ def add_product():
 
 @simple_pages.route('/products/<int:product_id>/delete', methods=['GET', 'POST'])
 @login_required
-@admin_required
+
 def delete_product(product_id):
     product = products.query.get(product_id)
     db.session.delete(product)
     db.session.commit()
     flash('Product Deleted', 'success')
     return redirect(url_for('simple_pages.view_products'))
+
+@simple_pages.route('/locations/<int:product_id>/edit' ,methods=['POST', 'GET'])
+@login_required
+
+def edit_product(product_id):
+    product = products.query.get(product_id)
+    form = edit_location_form(obj=product)
+    if form.validate_on_submit():
+        product.name = form.name.data
+        product.description = form.description.data
+        product.price = form.price.data
+        product.comments = form.comments.data
+        product.filename=form.filename.data
+        db.session.add(product)
+        db.session.commit()
+        flash("Products Edited Successfully", "success")
+        current_app.logger.info("edited a products")
+        return redirect(url_for("simple_pages.browse_products"))
+    return render_template("edit_products.html", form=form)
